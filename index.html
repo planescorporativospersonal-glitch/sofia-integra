@@ -967,13 +967,16 @@ Respondé ÚNICAMENTE con el mensaje de WhatsApp listo para enviar, sin explicac
     btn.innerHTML = '<span>⏳</span> Generando...';
 
     try {
-      const response = await fetch('/.netlify/functions/mensaje', {
+      const response = const response = await fetch('/.netlify/functions/mensaje', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
       });
 
       if (!response.ok) throw new Error('Error ' + response.status);
+        const err = await response.json().catch(()=>({}));
+        throw new Error(err.error?.message || 'Error ' + response.status);
+      }
       const data = await response.json();
       const mensaje = data.content?.[0]?.text || 'No se pudo generar el mensaje. Intentá de nuevo.';
 
