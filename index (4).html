@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sofia — Agente de Mensajes | Integra</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: #f0f4f8; min-height: 100vh; color: #1a1a2e; }
+
+header {
+  background: linear-gradient(135deg, #1a4f72 0%, #2980b9 100%);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.avatar { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid rgba(255,255,255,0.4); position: relative; flex-shrink: 0; }
+.dot { width: 12px; height: 12px; background: #2ecc71; border-radius: 50%; border: 2px solid white; position: absolute; bottom: 0; right: 0; }
+.hinfo h1 { font-size: 1.2rem; color: white; font-weight: 700; }
+.hinfo p { font-size: 0.75rem; color: rgba(255,255,255,0.7); }
+.hbrand { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.hbrand-text div:first-child { color: white; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; text-align: right; }
+.hbrand-text div:last-child { color: rgba(255,255,255,0.65); font-size: 0.62rem; letter-spacing: 1px; text-align: right; }
+.badge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.5px; }
+
+main { max-width: 640px; margin: 0 auto; padding: 20px 16px 40px; }
+
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; background: white; padding: 5px; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.tab { flex: 1; padding: 9px; border-radius: 10px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; color: #636e72; transition: all 0.2s; }
+.tab.active { background: #2980b9; color: white; font-weight: 600; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.card-title { font-size: 0.78rem; font-weight: 600; color: #636e72; margin-bottom: 12px; }
+
+input[type="text"], textarea {
+  width: 100%; padding: 11px 14px; border: 2px solid #e8ecf0; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: #1a1a2e;
+  background: #f8fafc; outline: none; transition: all 0.2s;
+}
+input[type="text"]:focus, textarea:focus { border-color: #2980b9; background: white; box-shadow: 0 0 0 3px rgba(41,128,185,0.1); }
+textarea { resize: vertical; min-height: 70px; }
+
+.pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.pill {
+  padding: 7px 14px; border-radius: 50px; border: 2px solid #e8ecf0;
+  background: #f8fafc; font-size: 0.8rem; font-weight: 500; cursor: pointer;
+  transition: all 0.2s; color: #636e72; user-select: none;
+}
+.pill:hover { border-color: #2980b9; color: #1a4f72; }
+.pill.active { background: #2980b9; border-color: #2980b9; color: white; font-weight: 600; }
+
+.steps { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.step-btn { padding: 11px; border-radius: 12px; border: 2px solid #e8ecf0; background: #f8fafc; cursor: pointer; transition: all 0.2s; text-align: center; }
+.step-btn .snum { font-size: 1.3rem; font-weight: 700; color: #636e72; display: block; }
+.step-btn .slbl { font-size: 0.68rem; color: #636e72; display: block; margin-top: 2px; }
+.step-btn.active { background: #e8f4fd; border-color: #2980b9; }
+.step-btn.active .snum { color: #1a4f72; }
+.step-btn.active .slbl { color: #1a4f72; }
+
+.btn-gen {
+  width: 100%; padding: 16px; background: linear-gradient(135deg, #2980b9, #1a4f72);
+  color: white; border: none; border-radius: 14px; font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s;
+  margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 6px 20px rgba(41,128,185,0.35);
+}
+.btn-gen:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(41,128,185,0.45); }
+.btn-gen:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.resultado-wrap { margin-top: 20px; display: none; animation: fadeUp 0.4s ease; }
+.resultado-wrap.visible { display: block; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.res-card { background: white; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden; }
+.res-header { background: linear-gradient(135deg, #1a4f72, #2980b9); padding: 13px 16px; display: flex; align-items: center; gap: 8px; }
+.res-header span { color: white; font-size: 0.82rem; font-weight: 500; }
+.res-body { padding: 16px; }
+
+.msg-text { background: #f0f4f8; border-radius: 12px; padding: 14px; font-size: 0.9rem; line-height: 1.7; color: #1a1a2e; white-space: pre-wrap; border-left: 3px solid #2980b9; min-height: 60px; }
+
+.loading { display: flex; gap: 5px; align-items: center; justify-content: center; padding: 16px; }
+.dot-l { width: 8px; height: 8px; border-radius: 50%; background: #2980b9; animation: bounce 1.2s infinite; }
+.dot-l:nth-child(2) { animation-delay: 0.2s; }
+.dot-l:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+.counter { background: #e8f4fd; border-radius: 8px; padding: 6px 12px; font-size: 0.74rem; color: #1a4f72; font-weight: 600; margin-top: 8px; text-align: center; display: none; }
+.counter.visible { display: block; }
+
+.acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; display: none; }
+.btn-ac { padding: 11px; border-radius: 10px; border: 2px solid #e8ecf0; background: white; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; color: #1a1a2e; }
+.btn-ac:hover { border-color: #2980b9; color: #1a4f72; background: #e8f4fd; }
+.btn-ac.copy { border-color: #2980b9; color: #1a4f72; background: #e8f4fd; }
+.btn-ac.copy:hover { background: #2980b9; color: white; }
+
+.tip { background: #fff3cd; border-radius: 12px; padding: 12px 14px; margin-top: 10px; display: none; flex-direction: row; gap: 8px; align-items: flex-start; font-size: 0.8rem; color: #856404; line-height: 1.5; }
+.tip.visible { display: flex; }
+
+.feedback-wrap { margin-top: 12px; display: none; }
+.feedback-wrap.visible { display: block; }
+.feedback-lbl { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #636e72; text-align: center; margin-bottom: 8px; }
+.feedback-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-fb { padding: 11px; border-radius: 10px; border: 2px solid #e8ecf0; background: white; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.btn-fb.si { border-color: #00b894; color: #00916e; background: #e8faf5; }
+.btn-fb.si:hover { background: #00b894; color: white; }
+.btn-fb.no { border-color: #e17055; color: #c0392b; background: #fdf0ee; }
+.btn-fb.no:hover { background: #e17055; color: white; }
+.fb-conf { text-align: center; padding: 10px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; margin-top: 6px; display: none; }
+.fb-conf.ok { background: #e8faf5; color: #00916e; display: block; }
+.fb-conf.nok { background: #fdf0ee; color: #c0392b; display: block; }
+
+.stats-bar { background: white; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); display: none; }
+.stats-bar.visible { display: block; }
+.stats-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #636e72; margin-bottom: 10px; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.stat-item { text-align: center; }
+.stat-num { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; display: block; }
+.stat-num.verde { color: #00916e; }
+.stat-num.rojo { color: #e17055; }
+.stat-lbl { font-size: 0.66rem; color: #636e72; }
+.prog-bar { height: 5px; background: #e8ecf0; border-radius: 10px; margin-top: 10px; overflow: hidden; }
+.prog-fill { height: 100%; background: linear-gradient(90deg, #2980b9, #1a4f72); border-radius: 10px; transition: width 0.5s ease; }
+
+.hist-item { background: white; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+.hist-item:hover { border-left-color: #2980b9; transform: translateX(3px); }
+.hist-nombre { font-weight: 600; font-size: 0.86rem; }
+.hist-preview { font-size: 0.76rem; color: #636e72; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-meta { font-size: 0.7rem; color: #b2bec3; margin-top: 3px; }
+
+.empty { text-align: center; padding: 28px; color: #636e72; font-size: 0.84rem; }
+
+footer { text-align: center; padding: 20px 16px 30px; color: #b2bec3; font-size: 0.7rem; line-height: 1.6; }
+footer strong { color: #636e72; }
+
+.intro { background: white; border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); display: flex; gap: 12px; align-items: flex-start; border-left: 4px solid #2980b9; }
+.intro p { font-size: 0.85rem; color: #636e72; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="avatar">👩‍💼<div class="dot"></div></div>
+  <div class="hinfo">
+    <h1>Sofía</h1>
+    <p>Agente de mensajes IA</p>
+  </div>
+  <div class="hbrand">
+    <div class="hbrand-text">
+      <div>INTEGRA</div>
+      <div>COMERCIALIZADORA</div>
+    </div>
+    <div class="badge">IA Activa</div>
+  </div>
+</header>
+
+<main>
+  <div class="stats-bar" id="stats-bar">
+    <div class="stats-title">📊 Efectividad — sesión actual</div>
+    <div class="stats-grid">
+      <div class="stat-item"><span class="stat-num" id="stat-total">0</span><span class="stat-lbl">Enviados</span></div>
+      <div class="stat-item"><span class="stat-num verde" id="stat-si">0</span><span class="stat-lbl">Respondieron</span></div>
+      <div class="stat-item"><span class="stat-num rojo" id="stat-no">0</span><span class="stat-lbl">Sin respuesta</span></div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div style="text-align:center;font-size:0.7rem;color:#636e72;margin-top:5px" id="stat-pct"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('generar')">✍️ Generar mensaje</button>
+    <button class="tab" onclick="switchTab('historial')">🕓 Historial</button>
+  </div>
+
+  <div id="tab-generar" class="tab-content active">
+    <div class="intro">
+      <div>💬</div>
+      <p>Completá los datos del cliente y Sofía genera el <strong>mensaje de WhatsApp ideal</strong> — cercano, humano y diseñado para generar respuesta.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👤 Nombre del cliente</div>
+      <input type="text" id="nombre" placeholder="Ej: Mariela, Carlos...">
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏥 Prepaga consultada</div>
+      <div class="pills" id="pills-prepaga">
+        <div class="pill active" data-val="Prevención Salud">Prevención Salud</div>
+        <div class="pill" data-val="Sancor Salud">Sancor Salud</div>
+        <div class="pill" data-val="Avalian">Avalian</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 Perfil del cliente</div>
+      <div class="pills" id="pills-perfil">
+        <div class="pill active" data-val="familia (grupo familiar)">Familia</div>
+        <div class="pill" data-val="monotributista / autónomo">Monotributista</div>
+        <div class="pill" data-val="relación de dependencia sin cobertura">En dependencia</div>
+        <div class="pill" data-val="PyME buscando cobertura grupal">PyME</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚠️ ¿Qué pasó hasta ahora?</div>
+      <div class="pills" id="pills-sit">
+        <div class="pill active" data-val="nunca_respondio">Nunca contestó</div>
+        <div class="pill" data-val="propuesta_enviada">Recibió propuesta y no responde</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔁 ¿Qué intento es este?</div>
+      <div class="steps" id="steps-intento">
+        <div class="step-btn active" data-val="1"><span class="snum">1°</span><span class="slbl">Primer contacto</span></div>
+        <div class="step-btn" data-val="2"><span class="snum">2°</span><span class="slbl">48hs sin respuesta</span></div>
+        <div class="step-btn" data-val="3"><span class="snum">3°</span><span class="slbl">5-7 días</span></div>
+        <div class="step-btn" data-val="4"><span class="snum">4°</span><span class="slbl">Cierre definitivo</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎂 Edad del titular</div>
+      <input type="text" id="edad" placeholder="Ej: 35 años, o rango 40-65 para grupo familiar...">
+    </div>
+
+    <div class="card">
+      <div class="card-title">👨‍👩‍👧‍👦 Cantidad de personas a cubrir</div>
+      <input type="text" id="cantidad" placeholder="Ej: 1 persona, 3 (titular + pareja + hijo)...">
+    </div>
+
+    <div class="card">
+      <div class="card-title">📍 Localidad</div>
+      <input type="text" id="localidad" placeholder="Ej: Córdoba capital, Villa María...">
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 Contexto extra (opcional)</div>
+      <textarea id="contexto" placeholder="Ej: dijo que le parecía caro, tiene diabetes, ya tiene OSDE..."></textarea>
+    </div>
+
+    <button class="btn-gen" id="btn-gen" onclick="generarMensaje()">
+      <span>✨</span> Generar mensaje con Sofía
+    </button>
+
+    <div class="resultado-wrap" id="resultado-wrap">
+      <div class="res-card">
+        <div class="res-header"><span>👩‍💼</span><span>Sofía generó este mensaje para vos</span></div>
+        <div class="res-body">
+          <div class="msg-text" id="msg-text"></div>
+          <div class="counter" id="counter"></div>
+          <div class="acciones" id="acciones">
+            <button class="btn-ac copy" onclick="copiar()">📋 Copiar mensaje</button>
+            <button class="btn-ac" onclick="regenerar()">🔄 Regenerar</button>
+          </div>
+          <div class="tip" id="tip">
+            <span>🎙️</span>
+            <span><strong>Tip de Sofía:</strong> Esperá 2 horas y mandá un audio de 40 seg. Empezá con el nombre, contá algo nuevo y terminá con una pregunta simple. Tono relajado.</span>
+          </div>
+          <div class="feedback-wrap" id="fb-wrap">
+            <div class="feedback-lbl">¿El cliente respondió este mensaje?</div>
+            <div class="feedback-btns">
+              <button class="btn-fb si" onclick="feedback(true)">✅ Sí, respondió</button>
+              <button class="btn-fb no" onclick="feedback(false)">❌ No respondió</button>
+            </div>
+            <div class="fb-conf" id="fb-conf"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-historial" class="tab-content">
+    <div id="hist-wrap"><div class="empty">😴 Todavía no generaste mensajes en esta sesión</div></div>
+  </div>
+
+  <footer>
+    <strong>🏢 Desarrollo exclusivo de Integra Comercializadora</strong><br>
+    Todos los derechos reservados · Córdoba, Argentina<br>
+    <span style="font-size:0.65rem">Sofía es una IA desarrollada internamente — uso exclusivo del equipo de ventas</span>
+  </footer>
+</main>
+
+<script>
+var estado = {
+  prepaga: 'Prevención Salud',
+  perfil: 'familia (grupo familiar)',
+  situacion: 'nunca_respondio',
+  intento: '1'
+};
+var historial = [];
+var mensajeActual = '';
+var stats = { total: 0, si: 0, no: 0 };
+
+// Pills
+document.querySelectorAll('.pills').forEach(function(g) {
+  g.querySelectorAll('.pill').forEach(function(p) {
+    p.addEventListener('click', function() {
+      g.querySelectorAll('.pill').forEach(function(x) { x.classList.remove('active'); });
+      p.classList.add('active');
+      var id = g.id;
+      if (id === 'pills-prepaga') estado.prepaga = p.dataset.val;
+      if (id === 'pills-perfil') estado.perfil = p.dataset.val;
+      if (id === 'pills-sit') estado.situacion = p.dataset.val;
+    });
+  });
+});
+
+// Steps
+document.querySelectorAll('.step-btn').forEach(function(b) {
+  b.addEventListener('click', function() {
+    document.querySelectorAll('.step-btn').forEach(function(x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    estado.intento = b.dataset.val;
+  });
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'historial') renderHist();
+}
+
+function generarMensaje() {
+  var nombre = document.getElementById('nombre').value.trim() || 'el cliente';
+  var contexto = document.getElementById('contexto').value.trim();
+  var edad = document.getElementById('edad').value.trim();
+  var cantidad = document.getElementById('cantidad').value.trim();
+  var localidad = document.getElementById('localidad').value.trim();
+
+  var sitLabel = estado.situacion === 'nunca_respondio'
+    ? 'el cliente pidió información por redes sociales pero nunca respondió el primer mensaje'
+    : 'el cliente recibió la propuesta económica pero dejó de responder';
+
+  var intentoMap = {
+    '1': 'primer intento de contacto',
+    '2': 'segundo intento, pasaron 48 horas sin respuesta',
+    '3': 'tercer intento, pasaron 5-7 días sin respuesta',
+    '4': 'mensaje de cierre definitivo, último intento'
+  };
+
+  var prompt = 'Sos Sofía, asesora de salud de Integra Comercializadora en Córdoba, Argentina. Tu rol es ayudar a vendedores a redactar mensajes de WhatsApp para seguimiento de clientes potenciales de prepagas.\n\n';
+  prompt += 'CONTEXTO DEL CLIENTE:\n';
+  prompt += '- Nombre: ' + nombre + '\n';
+  prompt += '- Prepaga consultada: ' + estado.prepaga + '\n';
+  prompt += '- Perfil: ' + estado.perfil + '\n';
+  prompt += '- Situación: ' + sitLabel + '\n';
+  prompt += '- Intento: ' + intentoMap[estado.intento] + '\n';
+  if (edad) prompt += '- Edad del titular: ' + edad + '\n';
+  if (cantidad) prompt += '- Cantidad de personas a cubrir: ' + cantidad + '\n';
+  if (localidad) prompt += '- Localidad: ' + localidad + '\n';
+  if (contexto) prompt += '- Información adicional: ' + contexto + '\n';
+  prompt += '\nREGLAS ESTRICTAS:\n';
+  prompt += '- Tono cercano, humano y cálido. Nunca robótico ni vendedor agresivo.\n';
+  prompt += '- El vendedor se presenta como asesor de salud independiente, no como empleado de la prepaga.\n';
+  prompt += '- Máximo 4-5 líneas de texto. Corto e impactante.\n';
+  prompt += '- Usar el nombre del cliente.\n';
+  prompt += '- Nunca preguntar "¿viste mi mensaje?". Siempre aportar algo nuevo o crear curiosidad.\n';
+  prompt += '- Máximo 1 emoji por mensaje.\n';
+  prompt += '- Terminar siempre con una pregunta simple y concreta que sea fácil de responder.\n';
+  prompt += '- Si es intento 3 o 4, incluir una urgencia real (actualización de cuotas).\n';
+  prompt += '- Si es el cierre definitivo, usar el principio de "no te escribo más".\n';
+  prompt += '- El mensaje NO debe mencionar el nombre Sofia en ningún caso.\n';
+  prompt += '- El mensaje debe sonar como lo escribió una persona real, no una IA.\n\n';
+  prompt += 'Respondé ÚNICAMENTE con el mensaje de WhatsApp listo para enviar, sin explicaciones, sin comillas, sin introducción.';
+
+  var wrap = document.getElementById('resultado-wrap');
+  var msgEl = document.getElementById('msg-text');
+  var acEl = document.getElementById('acciones');
+  var tipEl = document.getElementById('tip');
+  var cntEl = document.getElementById('counter');
+  var btn = document.getElementById('btn-gen');
+  var fbWrap = document.getElementById('fb-wrap');
+  var fbConf = document.getElementById('fb-conf');
+
+  wrap.classList.add('visible');
+  msgEl.innerHTML = '<div class="loading"><div class="dot-l"></div><div class="dot-l"></div><div class="dot-l"></div></div>';
+  acEl.style.display = 'none';
+  tipEl.classList.remove('visible');
+  cntEl.classList.remove('visible');
+  fbWrap.classList.remove('visible');
+  fbConf.className = 'fb-conf';
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Generando...';
+
+  fetch('/.netlify/functions/mensaje', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('Error ' + r.status);
+    return r.json();
+  })
+  .then(function(data) {
+    var msg = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : 'No se pudo generar el mensaje. Intentá de nuevo.';
+    mensajeActual = msg;
+    msgEl.textContent = msg;
+    cntEl.textContent = msg.length + ' caracteres · Óptimo para WhatsApp';
+    cntEl.classList.add('visible');
+    acEl.style.display = 'grid';
+    if (estado.intento === '1' || estado.intento === '2') tipEl.classList.add('visible');
+    fbWrap.classList.add('visible');
+    historial.unshift({ nombre: nombre, prepaga: estado.prepaga, intento: estado.intento, mensaje: msg, hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) });
+  })
+  .catch(function(err) {
+    msgEl.textContent = '❌ Hubo un error al conectar con la IA. Verificá tu conexión e intentá de nuevo.';
+  })
+  .finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = '<span>✨</span> Generar mensaje con Sofía';
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
+function regenerar() { generarMensaje(); }
+
+function copiar() {
+  if (!mensajeActual) return;
+  navigator.clipboard.writeText(mensajeActual).then(function() {
+    var b = document.querySelector('.btn-ac.copy');
+    b.textContent = '✅ ¡Copiado!';
+    setTimeout(function() { b.innerHTML = '📋 Copiar mensaje'; }, 2000);
+  }).catch(function() { alert('Copiá el texto manualmente desde el cuadro'); });
+}
+
+function feedback(respondio) {
+  stats.total++;
+  if (respondio) stats.si++; else stats.no++;
+  if (historial.length > 0) historial[0].feedback = respondio ? 'si' : 'no';
+  var conf = document.getElementById('fb-conf');
+  if (respondio) {
+    conf.className = 'fb-conf ok';
+    conf.textContent = '🎉 Excelente! Sofía va aprendiendo qué funciona.';
+  } else {
+    conf.className = 'fb-conf nok';
+    conf.textContent = '📝 Registrado. Ese dato ayuda a mejorar los mensajes.';
+  }
+  var bar = document.getElementById('stats-bar');
+  bar.classList.add('visible');
+  document.getElementById('stat-total').textContent = stats.total;
+  document.getElementById('stat-si').textContent = stats.si;
+  document.getElementById('stat-no').textContent = stats.no;
+  var pct = Math.round((stats.si / stats.total) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('stat-pct').textContent = pct + '% de tasa de respuesta en esta sesión';
+}
+
+function renderHist() {
+  var wrap = document.getElementById('hist-wrap');
+  if (historial.length === 0) {
+    wrap.innerHTML = '<div class="empty">😴 Todavía no generaste mensajes en esta sesión</div>';
+    return;
+  }
+  wrap.innerHTML = historial.map(function(item, i) {
+    return '<div class="hist-item" onclick="verHist(' + i + ')">' +
+      '<div class="hist-nombre">' + item.nombre + ' · ' + item.prepaga + '</div>' +
+      '<div class="hist-preview">' + item.mensaje + '</div>' +
+      '<div class="hist-meta">Intento ' + item.intento + ' · ' + item.hora + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function verHist(i) {
+  var item = historial[i];
+  mensajeActual = item.mensaje;
+  switchTab('generar');
+  var wrap = document.getElementById('resultado-wrap');
+  var msgEl = document.getElementById('msg-text');
+  var acEl = document.getElementById('acciones');
+  var cntEl = document.getElementById('counter');
+  wrap.classList.add('visible');
+  msgEl.textContent = item.mensaje;
+  acEl.style.display = 'grid';
+  cntEl.textContent = item.mensaje.length + ' caracteres · Historial';
+  cntEl.classList.add('visible');
+  wrap.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
